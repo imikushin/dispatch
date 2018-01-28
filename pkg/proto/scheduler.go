@@ -14,7 +14,7 @@ import (
 
 type Scheduler struct {
 	incomingInvocations <-chan Invocation
-	driverQueue *DriverPriorityQueue
+	driverQueue         *DriverPriorityQueue
 
 	driversAvailable *sync.Cond
 }
@@ -48,7 +48,7 @@ func NewDriver(name string, cost int, bufferSize int) *Driver {
 func (d *Driver) Run() {
 	for inv := range d.WorkQueue {
 		inv.Start(d.Name)
-		d.HasSpace.Broadcast() // the driver has free space in its work queue
+		d.HasSpace.Broadcast() // the driver has free space in its work queue, notify all schedulers
 	}
 }
 
@@ -66,7 +66,7 @@ func (s *Scheduler) addWhenAvailable(driver *Driver) {
 
 	driver.HasSpace.Wait()
 
-	s.Add(driver)
+	go s.Add(driver) // to release driver.HasSpace.L as soon as possible, continue in a go routine
 }
 
 func (s *Scheduler) Run() {
