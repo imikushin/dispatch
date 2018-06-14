@@ -52,6 +52,12 @@ func TestWriteSourceDir(t *testing.T) {
 	}
 	err = writeSourceDir(tmpDir, &f)
 	require.NoError(t, err)
+
+	ls, err := ioutil.ReadDir(tmpDir)
+	require.NoError(t, err)
+	assert.Equal(t, 1, len(ls))
+	assert.Equal(t, "mypkg", ls[0].Name())
+
 	b, err := ioutil.ReadFile(filepath.Join(tmpDir, "mypkg", "myfunc.py"))
 	require.NoError(t, err)
 	assert.Equal(t, "def hello(): pass", string(b))
