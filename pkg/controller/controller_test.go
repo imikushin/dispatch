@@ -110,3 +110,9 @@ func TestController(t *testing.T) {
 		t.Logf("deleted %s", name)
 	}
 }
+
+func TestDefaultController_Shutdown(t *testing.T) {
+	dc := NewController(Options{})
+	dc.Shutdown()
+	dc.Shutdown() // should not panic
+}

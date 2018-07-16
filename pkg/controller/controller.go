@@ -78,7 +78,7 @@ type Controller interface {
 
 // DefaultController defines a struct for a generic controller
 type DefaultController struct {
-	done    chan bool
+	done    chan struct{}
 	watcher chan WatchEvent
 	options Options
 
@@ -92,7 +92,7 @@ func NewController(options Options) Controller {
 	}
 
 	return &DefaultController{
-		done:    make(chan bool),
+		done:    make(chan struct{}),
 		watcher: make(chan WatchEvent),
 		options: options,
 
@@ -111,7 +111,10 @@ func (dc *DefaultController) Start() {
 
 // Shutdown stops the controller loop
 func (dc *DefaultController) Shutdown() {
-	dc.done <- true
+	defer func() {
+		recover() // suppress panic
+	}()
+	close(dc.done)
 }
 
 // Watcher returns a watcher channel for the controller
@@ -227,7 +230,7 @@ func (dc *DefaultController) sync() error {
 }
 
 // run runs the control loop
-func (dc *DefaultController) run(stopChan <-chan bool) {
+func (dc *DefaultController) run(stopChan <-chan struct{}) {
 	resyncTicker := time.NewTicker(dc.options.ResyncPeriod)
 	defer resyncTicker.Stop()
 
@@ -253,13 +256,16 @@ func (dc *DefaultController) run(stopChan <-chan bool) {
 	}()
 
 	go func() {
-		for range resyncTicker.C {
-			func() {
+		for {
+			select {
+			case <-stopChan:
+				return
+			case <-resyncTicker.C:
 				log.Debugf("%s periodic syncing with the underlying driver", dc.options.ServiceName)
 				if err := dc.sync(); err != nil {
 					log.Error(err)
 				}
-			}()
+			}
 		}
 	}()
 
