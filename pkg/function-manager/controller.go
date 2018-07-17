@@ -228,7 +228,6 @@ func (h *funcEntityHandler) getImage(ctx context.Context, organizationID string,
 }
 
 type runEntityHandler struct {
-	FaaS   functions.FaaSDriver
 	Runner functions.Runner
 	Store  entitystore.EntityStore
 }
@@ -378,7 +377,7 @@ func NewController(config *ControllerConfig, store entitystore.EntityStore, faas
 		ServiceName:  "functions",
 	})
 	c.AddEntityHandler(&funcEntityHandler{Store: store, FaaS: faas, ImgClient: imgClient, ImageBuilder: imageBuilder})
-	c.AddEntityHandler(&runEntityHandler{Store: store, FaaS: faas, Runner: runner})
+	c.AddEntityHandler(&runEntityHandler{Store: store, Runner: runner})
 
 	return c
 }

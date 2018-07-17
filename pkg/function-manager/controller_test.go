@@ -214,7 +214,6 @@ func TestRunEntityHandler_Add(t *testing.T) {
 
 	h := &runEntityHandler{
 		Store: helpers.MakeEntityStore(t),
-		FaaS:  faas,
 		Runner: runner.New(&runner.Config{
 			Faas:            faas,
 			Validator:       validator.NoOp(),
